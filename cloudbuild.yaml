@@ -1,0 +1,133 @@
+# ============================================================================
+# RE:Boot — GCP Cloud Build 파이프라인 (2-step deploy)
+# ----------------------------------------------------------------------------
+# 배포 전략: 두 번에 걸쳐 실행한다.
+#
+# [1차] API 먼저 배포 → Cloud Run 이 API URL 을 발급
+#      gcloud builds submit --config=cloudbuild.yaml \
+#        --substitutions=_REGION=asia-northeast3,_PROJECT_ID=edumedia-492410,\
+#        _DB_INSTANCE=edumedia-492410:asia-northeast3:reboot-pg,_API_URL='',_WEB_URL=''
+#
+# [2차] 1차 결과로 나온 API URL 을 _API_URL 에, WEB URL 은 _WEB_URL 에 넣어 재실행
+#      gcloud builds submit --config=cloudbuild.yaml \
+#        --substitutions=_REGION=asia-northeast3,_PROJECT_ID=edumedia-492410,\
+#        _DB_INSTANCE=...,_API_URL=https://eduation-media-api-xxx.run.app,\
+#        _WEB_URL=https://eduation-media-web-xxx.run.app
+#
+# 필수 Secret Manager secret (사전 생성):
+#   GEMINI_API_KEY
+#   JWT_SECRET
+#   DATABASE_URL
+# ============================================================================
+
+substitutions:
+  _REGION: asia-northeast3
+  _PROJECT_ID: ${PROJECT_ID}
+  _DB_INSTANCE: ''           # e.g. edumedia-492410:asia-northeast3:reboot-pg
+  _REPO: reboot
+  _API_SERVICE: eduation-media-api
+  _WEB_SERVICE: eduation-media-web
+  _API_URL: ''               # 1차 빌드 후 획득해서 2차에 주입
+  _WEB_URL: ''               # 1차 빌드 후 획득해서 2차에 주입
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
+
+images:
+  - ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/api:latest
+  - ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/web:latest
+
+steps:
+
+  # ==========================================================================
+  # 1) API 이미지 빌드
+  # ==========================================================================
+  - id: build-api
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/api:latest
+      - -t
+      - ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/api:latest
+      - ./api
+    waitFor: ['-']
+
+  - id: push-api
+    name: gcr.io/cloud-builders/docker
+    args: [push, --all-tags, '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/api']
+    waitFor: [build-api]
+
+  # ==========================================================================
+  # 2) WEB 이미지 빌드 (API URL 을 build arg 로 baked)
+  #    _API_URL 이 비어있으면 (1차) 임시 URL 사용 — 2차 빌드에서 교체
+  # ==========================================================================
+  - id: build-web
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --build-arg
+      - NEXT_PUBLIC_API_URL=${_API_URL}
+      - -t
+      - ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/web:latest
+      - -t
+      - ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/web:latest
+      - ./web
+    waitFor: ['-']
+
+  - id: push-web
+    name: gcr.io/cloud-builders/docker
+    args: [push, --all-tags, '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/web']
+    waitFor: [build-web]
+
+  # ==========================================================================
+  # 3) API Cloud Run 배포
+  # ==========================================================================
+  - id: deploy-api
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_API_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/api:latest
+      - --region=${_REGION}
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=8000
+      - --memory=1Gi
+      - --cpu=1
+      - --min-instances=0
+      - --max-instances=3
+      - --timeout=300
+      - --add-cloudsql-instances=${_DB_INSTANCE}
+      - >-
+        --set-env-vars=LLM_PROVIDER=gemini,LLM_CHAT_MODEL=gemini-2.5-flash,LLM_REASONING_MODEL=gemini-2.5-flash,LLM_MODEL_FAST=gemini-2.5-flash-lite,LLM_EMBEDDING_MODEL=gemini-embedding-001,LLM_EMBEDDING_DIM=768,ALLOWED_ORIGINS=${_WEB_URL},AUTO_BOOTSTRAP=true
+      - >-
+        --set-secrets=GEMINI_API_KEY=GEMINI_API_KEY:latest,JWT_SECRET=JWT_SECRET:latest,DATABASE_URL=DATABASE_URL:latest
+    waitFor: [push-api]
+
+  # ==========================================================================
+  # 4) WEB Cloud Run 배포
+  # ==========================================================================
+  - id: deploy-web
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_WEB_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/web:latest
+      - --region=${_REGION}
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=3000
+      - --memory=512Mi
+      - --cpu=1
+      - --min-instances=0
+      - --max-instances=3
+      - --timeout=60
+    waitFor: [push-web, deploy-api]
+
+timeout: 2400s

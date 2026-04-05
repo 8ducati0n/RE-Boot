@@ -1,0 +1,131 @@
+# ============================================================================
+# RE:Boot — GitHub Actions: Cloud Run 자동 배포 (2-phase)
+# ----------------------------------------------------------------------------
+# 트리거:
+#   - main 브랜치 push 시 자동 (단, vars.GCP_SECRETS_READY=true 이어야 실행)
+#   - Actions 탭에서 "Run workflow" 로 수동 실행
+#
+# 사전 준비 (1회):
+#   1) Cloud Shell 에서:  bash scripts/gcp-setup.sh
+#      → $HOME/reboot-gh-deploy-key.json 생성됨
+#   2) Repo Settings → Secrets:
+#        GCP_SA_KEY       (위 JSON 파일 내용 전체)
+#        GCP_PROJECT_ID   (e.g. edumedia-492410)
+#        GCP_DB_INSTANCE  (e.g. edumedia-492410:asia-northeast3:reboot-pg)
+#   3) Repo Settings → Variables:
+#        GCP_SECRETS_READY=true
+#        GCP_REGION=asia-northeast3  (선택)
+# ============================================================================
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-cloud-run
+  cancel-in-progress: false
+
+env:
+  GCP_REGION: ${{ vars.GCP_REGION || 'asia-northeast3' }}
+
+jobs:
+  deploy:
+    name: Build & Deploy (2-phase)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    # secrets 준비가 끝났을 때만 실행. 수동 실행은 항상 허용.
+    if: ${{ vars.GCP_SECRETS_READY == 'true' || github.event_name == 'workflow_dispatch' }}
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      # ──────────────────────────────────────────────────────────────
+      - name: Verify required secrets
+        run: |
+          missing=0
+          for s in GCP_SA_KEY GCP_PROJECT_ID GCP_DB_INSTANCE; do
+            if [ -z "${!s:-}" ]; then
+              echo "::error::Secret $s is missing. Set it in Repo Settings → Secrets."
+              missing=1
+            fi
+          done
+          if [ "$missing" = "1" ]; then exit 1; fi
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_DB_INSTANCE: ${{ secrets.GCP_DB_INSTANCE }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      # ──────────────────────────────────────────────────────────────
+      # Phase 1: API + 임시 WEB 배포 → Cloud Run URL 획득
+      # ──────────────────────────────────────────────────────────────
+      - name: Phase 1 — initial build (temporary URLs)
+        run: |
+          gcloud builds submit \
+            --project="${{ secrets.GCP_PROJECT_ID }}" \
+            --config=cloudbuild.yaml \
+            --substitutions=_REGION="${{ env.GCP_REGION }}",_PROJECT_ID="${{ secrets.GCP_PROJECT_ID }}",_DB_INSTANCE="${{ secrets.GCP_DB_INSTANCE }}",_API_URL=,_WEB_URL= \
+            .
+
+      - name: Fetch deployed URLs
+        id: urls
+        run: |
+          API_URL=$(gcloud run services describe eduation-media-api \
+            --region="${{ env.GCP_REGION }}" \
+            --project="${{ secrets.GCP_PROJECT_ID }}" \
+            --format='value(status.url)')
+          WEB_URL=$(gcloud run services describe eduation-media-web \
+            --region="${{ env.GCP_REGION }}" \
+            --project="${{ secrets.GCP_PROJECT_ID }}" \
+            --format='value(status.url)')
+          echo "api=$API_URL" >> "$GITHUB_OUTPUT"
+          echo "web=$WEB_URL" >> "$GITHUB_OUTPUT"
+          echo "::notice::API: $API_URL"
+          echo "::notice::WEB: $WEB_URL"
+
+      # ──────────────────────────────────────────────────────────────
+      # Phase 2: WEB 재빌드 (실제 API URL baked) + API CORS 재배포
+      # ──────────────────────────────────────────────────────────────
+      - name: Phase 2 — rebuild WEB with real API URL + refresh API CORS
+        run: |
+          gcloud builds submit \
+            --project="${{ secrets.GCP_PROJECT_ID }}" \
+            --config=cloudbuild.yaml \
+            --substitutions=_REGION="${{ env.GCP_REGION }}",_PROJECT_ID="${{ secrets.GCP_PROJECT_ID }}",_DB_INSTANCE="${{ secrets.GCP_DB_INSTANCE }}",_API_URL="${{ steps.urls.outputs.api }}",_WEB_URL="${{ steps.urls.outputs.web }}" \
+            .
+
+      - name: Summary
+        run: |
+          cat <<EOF >> $GITHUB_STEP_SUMMARY
+          # 🚀 배포 완료
+
+          | 서비스 | URL |
+          |---|---|
+          | Web | ${{ steps.urls.outputs.web }} |
+          | API | ${{ steps.urls.outputs.api }} |
+          | API docs | ${{ steps.urls.outputs.api }}/docs |
+          | Health | ${{ steps.urls.outputs.api }}/health |
+
+          ## 데모 계정
+          - 학생: \`student@demo.re\` / \`student1234\`
+          - 교수자: \`instructor@demo.re\` / \`instructor1234\`
+          - 매니저: \`manager@demo.re\` / \`manager1234\`
+
+          첫 부팅 시 AUTO_BOOTSTRAP=true 로 DB 스키마 + 시드 데이터 자동 생성됩니다.
+          EOF

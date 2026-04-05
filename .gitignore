@@ -1,0 +1,39 @@
+# Env / secrets
+.env
+.env.local
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Alembic
+# (keep versions/, don't ignore)
+
+# Node
+node_modules/
+.svelte-kit/
+build/
+dist/
+.vite/
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Docker
+docker/volumes/
+
+# Archive
+.archive/

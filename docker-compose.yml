@@ -1,0 +1,61 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: em_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-eduation_media}
+      POSTGRES_USER: ${POSTGRES_USER:-reboot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-reboot}
+    ports:
+      # host:container — host 5433 사용 (기존 re_boot 컨테이너와 충돌 회피)
+      - "5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-reboot}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: em_api
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-reboot}:${POSTGRES_PASSWORD:-reboot}@db:5432/${POSTGRES_DB:-eduation_media}
+    ports:
+      # host 8002 (기존 re_boot 컨테이너 8001 + 8000 회피)
+      - "8002:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./api:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        # Next.js NEXT_PUBLIC_* 는 빌드 타임에 번들에 박히므로 반드시 build arg 로 전달
+        NEXT_PUBLIC_API_URL: http://localhost:8002
+    container_name: em_web
+    environment:
+      # Next.js standalone 컨테이너가 PORT 를 존중하도록 3000 사용
+      # host 5273 (기존 re_boot-frontend 5173 과 충돌 회피)
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      NEXT_PUBLIC_API_URL: http://localhost:8002
+    ports:
+      - "5273:3000"
+    depends_on:
+      - api
+    # 프로덕션 이미지(standalone)는 빌드 시 생성된 .next 산출물을 사용하므로
+    # 소스 볼륨 마운트하지 않는다. (dev 모드 사용 시 volumes 섹션을 되살릴 것)
+
+volumes:
+  db_data:

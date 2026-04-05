@@ -1,0 +1,122 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 48 33% 97%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* 4안 Modern Gradient Indigo */
+    --primary: 239 84% 60%;            /* #4F46E5 indigo-600 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 226 100% 97%;         /* #EEF2FF indigo-50 */
+    --secondary-foreground: 234 89% 30%; /* #4338CA indigo-700 */
+
+    --muted: 220 33% 97%;              /* #F3F4F8 sky-50 */
+    --muted-foreground: 217 19% 35%;   /* slate2-700 */
+
+    --accent: 226 100% 94%;            /* #E0E7FF indigo-100 */
+    --accent-foreground: 234 89% 30%;  /* #4338CA indigo-700 */
+
+    --destructive: 0 72% 51%;          /* red-600 (not rose) */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 226 100% 89%;            /* #C7D2FE indigo-200 */
+    --input: 226 100% 89%;
+    --ring: 239 84% 67%;               /* #6366F1 indigo-500 */
+
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  html[lang='ko'] body {
+    font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+      system-ui, sans-serif;
+    word-break: keep-all;
+    line-height: 1.7;
+    letter-spacing: -0.01em;
+    font-feature-settings: 'tnum';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .metric,
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  .word-keep-all {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/40 shadow-[0_1px_0_0_rgba(255,255,255,0.6)_inset];
+  }
+
+  .glass-dark {
+    @apply bg-indigo-900/70 backdrop-blur-md border border-white/10 text-white;
+  }
+
+  /* Double-Bezel: outer border + inset highlight ring (supanova-style) */
+  .double-bezel {
+    @apply border border-slate-200 rounded-2xl;
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.8) inset,
+      0 0 0 1px rgba(15, 23, 42, 0.02),
+      0 10px 30px -12px rgba(15, 23, 42, 0.08);
+  }
+
+  .double-bezel-indigo {
+    @apply border border-indigo-100 rounded-2xl;
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.9) inset,
+      0 0 0 1px rgba(79, 70, 229, 0.06),
+      0 10px 30px -12px rgba(30, 27, 75, 0.12);
+  }
+
+  /* 4안: double-bezel-amber 는 폐기 (indigo 통일). 호환성을 위해 alias 유지. */
+  .double-bezel-amber {
+    @apply border border-indigo-100 rounded-2xl;
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.9) inset,
+      0 0 0 1px rgba(79, 70, 229, 0.06),
+      0 10px 30px -12px rgba(30, 27, 75, 0.12);
+  }
+
+  /* L1 히어로 그라데이션 텍스트 */
+  .text-em-grad {
+    background-image: linear-gradient(135deg, #6366F1 0%, #8B5CF6 60%, #A78BFA 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .grain::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(
+      rgba(15, 23, 42, 0.03) 1px,
+      transparent 1px
+    );
+    background-size: 3px 3px;
+  }
+}
