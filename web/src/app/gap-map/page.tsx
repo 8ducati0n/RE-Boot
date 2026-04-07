@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GapMapDonut, type GapMapDatum } from '@/components/GapMapDonut';
-import { GapMapSummary } from '@/components/GapMapSummary';
+import { GapMapRadar } from '@/components/GapMapRadar';
 import { api } from '@/lib/api';
 import { Compass } from 'lucide-react';
 
@@ -80,11 +80,11 @@ export default function GapMapPage() {
           {data && data.length > 0 && (
             <section className="space-y-4">
               <h2 className="text-xl font-bold text-indigo-900 tracking-tight">
-                전체 역량 현황
+                전체 역량 레이더
               </h2>
               <Card>
                 <CardContent className="pt-6">
-                  <GapMapSummary data={data} />
+                  <GapMapRadar data={data} />
                 </CardContent>
               </Card>
             </section>

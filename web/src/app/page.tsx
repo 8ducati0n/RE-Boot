@@ -425,7 +425,7 @@ export default function LandingPage() {
             {[
               { Icon: Calendar, label: '2026.05.30', sub: '학술대회 일시' },
               { Icon: Building2, label: '연세대학교', sub: '개최 장소' },
-              { Icon: BookMarked, label: '김혜진', sub: '교육공학 석사' },
+              { Icon: BookMarked, label: '김혜진', sub: '교육공학 석사과정' },
             ].map((c) => (
               <div
                 key={c.label}
