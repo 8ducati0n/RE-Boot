@@ -317,19 +317,24 @@ export default function LandingPage() {
             학습자와 교수자, 두 개의 여정
           </h2>
 
-          <div className="mt-14 grid gap-12 md:grid-cols-2">
+          <div className="mt-14 grid gap-8 md:grid-cols-2">
             {/* Student */}
-            <div>
-              <h3 className="mb-8 text-center text-xl font-bold text-indigo-700">학습자 여정</h3>
-              <ol className="space-y-6">
+            <div className="rounded-2xl border border-indigo-100 bg-white p-8 shadow-sm">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100">
+                  <span className="text-lg">🎓</span>
+                </div>
+                <h3 className="text-xl font-bold text-indigo-700">학습자 여정</h3>
+              </div>
+              <ol className="space-y-5">
                 {STUDENT_STEPS.map((s, i) => (
-                  <li key={s.title} className="flex items-start gap-4">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
+                  <li key={s.title} className="flex items-start gap-4 rounded-xl border border-indigo-50 bg-indigo-50/30 p-4 hover:border-indigo-200 hover:bg-indigo-50/60 transition">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white shadow-sm">
                       {i + 1}
                     </span>
                     <div>
                       <p className="font-semibold text-gray-900">{s.title}</p>
-                      <p className="mt-0.5 text-sm text-gray-600">{s.desc}</p>
+                      <p className="mt-1 text-sm text-gray-600 leading-relaxed">{s.desc}</p>
                     </div>
                   </li>
                 ))}
@@ -337,17 +342,22 @@ export default function LandingPage() {
             </div>
 
             {/* Instructor */}
-            <div>
-              <h3 className="mb-8 text-center text-xl font-bold text-indigo-700">교수자 여정</h3>
-              <ol className="space-y-6">
+            <div className="rounded-2xl border border-indigo-100 bg-white p-8 shadow-sm">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100">
+                  <span className="text-lg">👨‍🏫</span>
+                </div>
+                <h3 className="text-xl font-bold text-indigo-700">교수자 여정</h3>
+              </div>
+              <ol className="space-y-5">
                 {INSTRUCTOR_STEPS.map((s, i) => (
-                  <li key={s.title} className="flex items-start gap-4">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
+                  <li key={s.title} className="flex items-start gap-4 rounded-xl border border-indigo-50 bg-indigo-50/30 p-4 hover:border-indigo-200 hover:bg-indigo-50/60 transition">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-600 text-sm font-bold text-white shadow-sm">
                       {i + 1}
                     </span>
                     <div>
                       <p className="font-semibold text-gray-900">{s.title}</p>
-                      <p className="mt-0.5 text-sm text-gray-600">{s.desc}</p>
+                      <p className="mt-1 text-sm text-gray-600 leading-relaxed">{s.desc}</p>
                     </div>
                   </li>
                 ))}
