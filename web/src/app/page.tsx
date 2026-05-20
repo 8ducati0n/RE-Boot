@@ -138,7 +138,7 @@ const LEARNER_COMPONENTS = [
   {
     Icon: MessageSquareCode,
     no: '3',
-    title: 'Socratic CAM LLM',
+    title: 'CAM 기반 멘토링 LLM',
     when: '실습 · 자습 중',
     module: '③ 개입',
   },
