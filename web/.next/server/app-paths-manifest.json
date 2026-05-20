@@ -1,0 +1,12 @@
+{
+  "/page": "app/page.js",
+  "/curriculum/page": "app/curriculum/page.js",
+  "/tutor/page": "app/tutor/page.js",
+  "/instructor/page": "app/instructor/page.js",
+  "/placement/page": "app/placement/page.js",
+  "/gap-map/page": "app/gap-map/page.js",
+  "/checklist/page": "app/checklist/page.js",
+  "/quiz/page": "app/quiz/page.js",
+  "/auth/page": "app/auth/page.js",
+  "/_not-found/page": "app/_not-found/page.js"
+}

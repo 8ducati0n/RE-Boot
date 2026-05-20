@@ -27,7 +27,10 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable.css"
         />
       </head>
-      <body className="font-sans antialiased word-keep-all bg-cream-50 text-slate-800 min-h-screen">
+      <body
+        suppressHydrationWarning
+        className="font-sans antialiased word-keep-all bg-cream-50 text-slate-800 min-h-screen"
+      >
         <Providers>{children}</Providers>
       </body>
     </html>

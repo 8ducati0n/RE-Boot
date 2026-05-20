@@ -6,224 +6,315 @@ import { Navbar } from '@/components/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { api } from '@/lib/api';
-import { ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+import { ArrowRight, BellRing, ListChecks, MessageSquareCode, Sparkles, Target } from 'lucide-react';
 
-// 백엔드 schemas/placement.py 와 동일
-interface PlacementQuestion {
-  id: number;
-  question_text: string;
-  options: string[];        // 예: ["1) tuple", "2) str", "3) list", "4) int"]
-  category?: string;
-  difficulty: number;
-  order: number;
-}
-interface PlacementResult {
-  id: number;
-  level: number;            // 1 | 2 | 3
-  score: number;
-  total: number;
-  category_scores: Record<string, { correct: number; total: number; ratio: number }>;
-  gap_map?: unknown[];
-}
+/* ───────────────────────────────────────────
+   F3. 학습목표 자기평가 (v2.1-C · Component 1)
+   - 수업 전 사전 평가 → 수업 후 사후 평가
+   - 격차(gap) 시각화 → 능력 착각 검출
+   - Risk Score 가중치 15
+   ─────────────────────────────────────────── */
 
-// 옵션 문자열 "1) tuple" → {id:"1", text:"tuple"}
-function parseOption(raw: string): { id: string; text: string } {
-  const m = raw.match(/^\s*(\d+)\s*[\)\.]\s*(.+)$/);
-  if (m) return { id: m[1], text: m[2].trim() };
-  return { id: raw, text: raw };
-}
+type EvalLevel = 0 | 1 | 2; // 전혀 모름 / 들어봤음 / 할 수 있음
 
-const LEVEL_LABELS: Record<number, { name: string; desc: string }> = {
-  1: { name: 'Level 1 · 기초', desc: '핵심 개념을 다지는 단계입니다.' },
-  2: { name: 'Level 2 · 중급', desc: '실무형 과제를 수행할 수 있는 단계입니다.' },
-  3: { name: 'Level 3 · 심화', desc: '자율적으로 프로젝트를 이끌 수 있는 단계입니다.' },
-};
+const LEVELS: { v: EvalLevel; label: string; desc: string }[] = [
+  { v: 0, label: '전혀 모름', desc: '처음 듣는 개념' },
+  { v: 1, label: '들어봤음', desc: '용어는 안다, 직접 못 함' },
+  { v: 2, label: '할 수 있음', desc: '직접 작성해본 적 있음' },
+];
 
-export default function PlacementPage() {
-  const [questions, setQuestions] = React.useState<PlacementQuestion[] | null>(null);
-  // answers key는 question_id(number 문자열), value는 선택한 옵션의 id("1"/"2"/"3"/"4")
-  const [answers, setAnswers] = React.useState<Record<string, string>>({});
-  const [submitting, setSubmitting] = React.useState(false);
-  const [result, setResult] = React.useState<PlacementResult | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
+const OBJECTIVES = [
+  '함수를 정의하고 호출할 수 있다',
+  '지역변수와 전역변수의 차이를 설명할 수 있다',
+  '매개변수와 인자를 구분하여 사용할 수 있다',
+];
 
-  React.useEffect(() => {
-    api<PlacementQuestion[]>('/api/diagnose/questions')
-      .then((d) => setQuestions(Array.isArray(d) ? d : []))
-      .catch((e) => setError(e.message));
-  }, []);
+const LESSON = 'Day 12 · 파이썬 함수와 스코프';
 
-  async function onSubmit() {
-    setSubmitting(true);
-    setError(null);
-    try {
-      // 백엔드 PlacementSubmission 은 list[dict] 형식의 answers 를 기대
-      // → [{question_id: number, answer: string}]
-      const payload = {
-        answers: Object.entries(answers).map(([qid, ans]) => ({
-          question_id: Number(qid),
-          answer: ans,
-        })),
-      };
-      const res = await api<PlacementResult>('/api/diagnose/submit', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
-      setResult(res);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setSubmitting(false);
-    }
+type Phase = 'pre' | 'post';
+
+export default function SelfEvalPage() {
+  const [phase, setPhase] = React.useState<Phase>('pre');
+  const [pre, setPre] = React.useState<(EvalLevel | null)[]>(
+    OBJECTIVES.map(() => null),
+  );
+  const [post, setPost] = React.useState<(EvalLevel | null)[]>(
+    OBJECTIVES.map(() => null),
+  );
+
+  const current = phase === 'pre' ? pre : post;
+  const setCurrent = phase === 'pre' ? setPre : setPost;
+
+  function pick(i: number, v: EvalLevel) {
+    const next = [...current];
+    next[i] = v;
+    setCurrent(next);
   }
+
+  const allFilled = current.every((c) => c !== null);
+  const preDone = pre.every((c) => c !== null);
+  const postDone = post.every((c) => c !== null);
+
+  const showResult = preDone && postDone;
 
   return (
     <>
       <Navbar />
       <main className="min-h-screen pt-32 pb-16 px-4 bg-cream-50">
-        <div className="max-w-3xl mx-auto space-y-6">
-          <header>
-            <Badge variant="indigo">수준 진단 · ZPD</Badge>
-            <h1 className="mt-3 text-3xl md:text-4xl font-bold text-indigo-900 tracking-tight">
-              당신의 현재 수준을 확인합니다
+        <div className="mx-auto max-w-3xl space-y-6">
+          <header className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="indigo">
+                <Target className="mr-1 h-3 w-3" /> 학습자 컴포넌트 1
+              </Badge>
+              <Badge variant="outline">학습목표 자기평가</Badge>
+              <Badge variant="outline" className="font-mono text-[10px]">
+                Risk 가중치 15
+              </Badge>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-indigo-900 tracking-tight">
+              오늘 학습목표를 본인 말로 평가해보세요
             </h1>
-            <p className="mt-2 text-slate-600">
-              응답을 바탕으로 Lv1/Lv2/Lv3 판정과 카테고리별 갭맵을 생성합니다.
+            <p className="text-slate-600">
+              {LESSON} · 수업 전 사전 평가 → 수업 후 사후 평가 → 격차(gap) 시각화로
+              능력 착각을 검출합니다.
             </p>
           </header>
 
-          {error && (
-            <Card>
-              <CardContent className="pt-6 text-red-600 text-sm">{error}</CardContent>
-            </Card>
-          )}
+          {/* Phase tabs */}
+          <div className="inline-flex rounded-full border border-indigo-100 bg-white p-1">
+            {(['pre', 'post'] as Phase[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPhase(p)}
+                className={cn(
+                  'rounded-full px-4 py-1.5 text-xs font-semibold transition',
+                  phase === p
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-slate-600 hover:bg-indigo-50',
+                )}
+              >
+                {p === 'pre' ? '① 수업 전' : '② 수업 후'}
+                {(p === 'pre' ? preDone : postDone) && ' ✓'}
+              </button>
+            ))}
+          </div>
 
-          {!questions && !error && (
-            <div className="space-y-3">
-              <Skeleton className="h-28" />
-              <Skeleton className="h-28" />
-              <Skeleton className="h-28" />
-            </div>
-          )}
-
-          {result ? (
+          {/* Eval cards */}
+          {!showResult && (
             <Card>
               <CardHeader>
-                <Badge variant="indigo" className="w-fit">
-                  <CheckCircle2 className="w-3 h-3 mr-1" /> 진단 완료
-                </Badge>
-                <CardTitle className="mt-2 text-indigo-900">
-                  {LEVEL_LABELS[result.level]?.name ?? `Level ${result.level}`}
+                <CardTitle className="text-base text-indigo-900">
+                  {phase === 'pre' ? '수업 시작 5분 전' : '수업 종료 직후'}
                 </CardTitle>
                 <CardDescription>
-                  {LEVEL_LABELS[result.level]?.desc} ·{' '}
-                  <span className="font-mono text-indigo-700">
-                    {result.score}/{result.total}
-                  </span>{' '}
-                  정답
+                  각 학습목표에 대해 본인의 현재 상태를 한 가지만 선택하세요.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {result.category_scores && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                    {Object.entries(result.category_scores).map(([cat, s]) => (
-                      <div
-                        key={cat}
-                        className="rounded-lg border border-indigo-100 bg-indigo-50/40 px-3 py-2"
-                      >
-                        <div className="font-semibold text-indigo-700">{cat}</div>
-                        <div className="font-mono text-indigo-900 mt-0.5">
-                          {s.correct}/{s.total}
-                        </div>
-                      </div>
-                    ))}
+                {OBJECTIVES.map((obj, i) => (
+                  <div key={i} className="rounded-xl border border-indigo-100 p-4">
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
+                        {i + 1}
+                      </span>
+                      <p className="text-sm font-medium text-slate-800">{obj}</p>
+                    </div>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                      {LEVELS.map((lv) => {
+                        const selected = current[i] === lv.v;
+                        return (
+                          <button
+                            key={lv.v}
+                            onClick={() => pick(i, lv.v)}
+                            className={cn(
+                              'rounded-lg border px-3 py-2 text-left text-xs transition',
+                              selected
+                                ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-300'
+                                : 'border-indigo-100 hover:border-indigo-300 hover:bg-indigo-50/30',
+                            )}
+                          >
+                            <p
+                              className={cn(
+                                'font-semibold',
+                                selected ? 'text-indigo-700' : 'text-slate-700',
+                              )}
+                            >
+                              {lv.label}
+                            </p>
+                            <p className="mt-0.5 text-[10px] text-slate-500">{lv.desc}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                )}
-                <Link href="/gap-map">
-                  <Button size="lg">
-                    갭맵 확인하러 가기 <ArrowRight className="w-4 h-4" />
+                ))}
+
+                <div className="flex items-center justify-between gap-3 pt-2">
+                  <p className="text-xs text-slate-500">
+                    {phase === 'pre'
+                      ? '제출 후 수업이 시작됩니다.'
+                      : '제출 후 사전/사후 격차가 시각화됩니다.'}
+                  </p>
+                  <Button
+                    size="sm"
+                    disabled={!allFilled}
+                    onClick={() => {
+                      if (phase === 'pre') setPhase('post');
+                    }}
+                  >
+                    {phase === 'pre' ? '제출하고 수업 시작' : '제출하고 결과 보기'}
+                    <ArrowRight className="h-4 w-4" />
                   </Button>
-                </Link>
+                </div>
               </CardContent>
             </Card>
-          ) : (
-            questions && (
-              <>
-                {questions.map((q, idx) => {
-                  const parsedOptions = q.options.map(parseOption);
-                  return (
-                    <Card key={q.id}>
-                      <CardHeader>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge variant="outline">Q{idx + 1}</Badge>
-                          {q.category && <Badge variant="indigo">{q.category}</Badge>}
-                          <Badge variant="secondary" className="font-mono">
-                            Lv{q.difficulty}
-                          </Badge>
+          )}
+
+          {showResult && (
+            <>
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-3">
+                    <CardTitle className="text-base text-indigo-900">
+                      사전 · 사후 격차 시각화
+                    </CardTitle>
+                    <Badge variant="indigo" className="font-mono text-[10px]">
+                      gap = post − pre
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {OBJECTIVES.map((obj, i) => {
+                    const p1 = pre[i] ?? 0;
+                    const p2 = post[i] ?? 0;
+                    const gap = p2 - p1;
+                    const flagSuspicious = p1 === 0 && p2 === 2; // 0 → 할 수 있음
+                    return (
+                      <div key={i} className="rounded-xl border border-indigo-100 p-4">
+                        <p className="text-sm font-medium text-slate-800">
+                          {i + 1}. {obj}
+                        </p>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr] items-center">
+                          <Bar label="사전" value={p1} />
+                          <Bar label="사후" value={p2} highlight />
                         </div>
-                        <CardTitle className="mt-3 text-lg text-indigo-900 leading-relaxed">
-                          {q.question_text}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        {parsedOptions.map((opt) => {
-                          const selected = answers[String(q.id)] === opt.id;
-                          return (
-                            <button
-                              key={opt.id}
-                              type="button"
-                              onClick={() =>
-                                setAnswers({ ...answers, [String(q.id)]: opt.id })
-                              }
-                              className={`w-full text-left rounded-xl border p-3 text-sm transition flex items-start gap-3 ${
-                                selected
-                                  ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-medium shadow-sm'
-                                  : 'border-indigo-100 hover:border-indigo-300 hover:bg-indigo-50/30'
-                              }`}
-                            >
-                              <span
-                                className={`flex-shrink-0 w-6 h-6 rounded-full font-mono text-xs flex items-center justify-center ${
-                                  selected
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'bg-indigo-50 text-indigo-500'
-                                }`}
-                              >
-                                {opt.id}
-                              </span>
-                              <span className="pt-0.5">{opt.text}</span>
-                            </button>
-                          );
-                        })}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-                {questions.length > 0 && (
-                  <Button
-                    size="lg"
-                    onClick={onSubmit}
-                    disabled={submitting || Object.keys(answers).length === 0}
-                    className="w-full"
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" /> 제출 중
-                      </>
-                    ) : (
-                      <>
-                        진단 제출 ({Object.keys(answers).length}/{questions.length}){' '}
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </Button>
-                )}
-              </>
-            )
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                          <span className="font-mono text-slate-500">
+                            {LEVELS[p1].label} → {LEVELS[p2].label}
+                          </span>
+                          <span
+                            className={cn(
+                              'rounded-full px-2 py-0.5 font-mono',
+                              gap > 0
+                                ? 'bg-emerald-50 text-emerald-700'
+                                : gap === 0
+                                ? 'bg-slate-100 text-slate-600'
+                                : 'bg-rose-50 text-rose-700',
+                            )}
+                          >
+                            gap {gap >= 0 ? '+' : ''}
+                            {gap}
+                          </span>
+                          {flagSuspicious && (
+                            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-amber-800">
+                              ⚠ 능력 착각 의심 신호 (0 → 할 수 있음)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <Separator />
+                  <div className="rounded-lg bg-indigo-50/60 p-3 text-xs text-indigo-700">
+                    이 격차 데이터는 강사 대시보드 Risk Score에 가중치 15로 합산되며,
+                    체크리스트(증거 입력)와 CAM 대화 신호와 함께 비교됩니다.
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Next actions */}
+              <div className="grid gap-3 sm:grid-cols-3">
+                <NextLink
+                  href="/tutor"
+                  Icon={MessageSquareCode}
+                  title="CAM 멘토링"
+                  desc="격차가 큰 항목은 CAM 자습 큐로"
+                />
+                <NextLink
+                  href="/checklist"
+                  Icon={ListChecks}
+                  title="체크리스트"
+                  desc="증거 입력으로 능력 착각 확인"
+                />
+                <NextLink
+                  href="/gap-map"
+                  Icon={BellRing}
+                  title="이수율 보기"
+                  desc="동기 평균 대비 본인 위치"
+                />
+              </div>
+            </>
           )}
         </div>
       </main>
     </>
+  );
+}
+
+function Bar({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: EvalLevel;
+  highlight?: boolean;
+}) {
+  const width = ((value + 1) / 3) * 100;
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-[10px] text-slate-500">
+        <span>{label}</span>
+        <span className="font-mono">{LEVELS[value].label}</span>
+      </div>
+      <div className="h-2 w-full rounded-full bg-indigo-50">
+        <div
+          className={cn(
+            'h-full rounded-full',
+            highlight ? 'bg-indigo-600' : 'bg-indigo-300',
+          )}
+          style={{ width: `${width}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function NextLink({
+  href,
+  Icon,
+  title,
+  desc,
+}: {
+  href: string;
+  Icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group rounded-xl border border-indigo-100 bg-white p-4 transition hover:border-indigo-300 hover:bg-indigo-50/50"
+    >
+      <div className="flex items-center justify-between">
+        <Icon className="h-5 w-5 text-indigo-600" />
+        <Sparkles className="h-3 w-3 text-indigo-300 opacity-0 transition group-hover:opacity-100" />
+      </div>
+      <p className="mt-2 text-sm font-semibold text-indigo-900">{title}</p>
+      <p className="mt-0.5 text-xs text-slate-600">{desc}</p>
+    </Link>
   );
 }

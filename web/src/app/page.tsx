@@ -1,18 +1,20 @@
 import Link from 'next/link';
 import {
-  Target,
-  Route,
-  RefreshCw,
-  MessageSquareCode,
-  BellRing,
-  ClipboardCheck,
+  Compass,
+  Repeat,
   ShieldCheck,
-  UserCheck,
+  Users,
+  Target,
+  ListChecks,
+  ClipboardCheck,
+  MessageSquareCode,
+  Bot,
+  Brain,
+  HeartHandshake,
   Calendar,
   Building2,
   BookMarked,
   ArrowRight,
-  Play,
   Github,
   ChevronDown,
   Sparkles,
@@ -20,124 +22,231 @@ import {
 
 /* ───────────────────────────────────────────
    RE:Boot Landing Page
-   Next.js 15 Server Component
-   Palette: 4안 Modern Gradient Indigo
+   Anchor: KAEIM 2026 제출 초록 + 포스터/기획 설계 문서
+   파일: RE_Boot_KAEIM2026_포스터_기획설계.md
    ─────────────────────────────────────────── */
 
+const PAPER_TITLE =
+  "부트캠프형 SW·AI 교육의 중도 이탈률 감소와 AI 과의존 방지를 위한 Human-in-the-Loop 적응형 학습 플랫폼 'RE:Boot' 설계 및 개발";
+
 const NAV_LINKS = [
-  { label: '서비스', href: '#features' },
-  { label: '사용여정', href: '#journey' },
+  { label: '문제', href: '#problem' },
+  { label: '순환 구조', href: '#cycle' },
+  { label: '4 모듈', href: '#modules' },
+  { label: '구현', href: '#implementation' },
   { label: '학회', href: '#conference' },
-  { label: '데모', href: '#demo' },
 ] as const;
 
-const FEATURES = [
+const PROBLEMS = [
+  {
+    label: '부트캠프 중도 이탈',
+    metric: '약 21%',
+    detail: '1인당 국비 손실 최대 2,000만 원',
+    source: '박진아·김지은 (2024)',
+  },
+  {
+    label: 'AI 과의존',
+    metric: '이해 환상',
+    detail: '학습자가 GPT 즉답을 받아 “이해한 느낌”만 얻고 실제 수행은 못 함',
+    source: 'EDM (2025)',
+  },
+  {
+    label: '교수자 역량 편차',
+    metric: '비도메인 역량 부재',
+    detail: 'SW 강사는 도메인 스킬은 있으나 학습자 이해·정서 지원·동기 부여 역량이 구조적으로 부족',
+    source: '서울시 부트캠프 현장 관찰',
+  },
+  {
+    label: '데이터 인프라 공백',
+    metric: 'LMS 미보유',
+    detail: 'LMS 미보유 운영사는 학습자 데이터 축적·분석 기반이 부재',
+    source: '운영사 인터뷰',
+  },
+] as const;
+
+const CYCLE = [
+  {
+    phase: '진단',
+    label: 'Diagnose',
+    body: 'Vygotsky ZPD에 기반한 수준 진단 + 갭 맵으로 사전지식 편차를 정량화한다.',
+  },
+  {
+    phase: '개입',
+    label: 'Intervene',
+    body: 'AI-TPACK 협업으로 AI가 제안하고 교수자가 승인한 콘텐츠만 학습자에게 전달된다. 조기경보·동료 그룹핑이 동반된다.',
+  },
+  {
+    phase: '보정',
+    label: 'Reinforce',
+    body: 'Bloom 완전학습 형성평가 + Ebbinghaus 망각곡선 간격 반복으로 지식을 정착시킨다.',
+  },
+] as const;
+
+const MODULES = [
+  {
+    Icon: Compass,
+    no: '①',
+    title: '수준 진단 + 갭 맵',
+    theory: 'Vygotsky ZPD',
+    body: '학습자 간 사전지식 편차를 정량화한다.',
+  },
+  {
+    Icon: Repeat,
+    no: '②',
+    title: '형성평가 + 간격 반복',
+    theory: 'Bloom 완전학습 · Ebbinghaus 망각곡선',
+    body: '형성평가와 1·3·7·16일 간격의 재인출 퀴즈로 지식을 정착시킨다.',
+  },
+  {
+    Icon: ShieldCheck,
+    no: '③',
+    title: 'AI-TPACK HITL 협업',
+    theory: 'AI-TPACK',
+    body: 'AI가 교육적 개입을 제안하고 교수자가 승인해야만 학습자에게 전달된다. AI 과의존을 구조적으로 방지한다.',
+  },
+  {
+    Icon: Users,
+    no: '④',
+    title: '조기경보 + 동료 그룹핑',
+    theory: 'Learning Analytics',
+    body: '이탈 위험 학습자를 선제적으로 식별하고 데이터 기반 동료 학습 그룹핑으로 사회적 유대를 형성한다.',
+  },
+] as const;
+
+const LEARNER_COMPONENTS = [
+  {
+    Icon: ListChecks,
+    no: '0',
+    title: '전체 과정 이수율 점검',
+    when: '항상',
+    module: '① 진단',
+  },
   {
     Icon: Target,
-    title: '수준 진단 + 갭맵',
-    desc: '진입 테스트로 현재 수준을 측정하고, ZPD 기반 갭맵을 자동 생성하여 학습 목표와의 거리를 시각화합니다.',
-    tag: 'ZPD',
-  },
-  {
-    Icon: Route,
-    title: '적응형 커리큘럼 + 교수자 승인',
-    desc: 'AI가 갭맵 기반 최적 커리큘럼을 제안하고, 교수자가 AI-TPACK 관점에서 검토·승인한 뒤 학습자에게 전달합니다.',
-    tag: 'AI-TPACK',
-  },
-  {
-    Icon: RefreshCw,
-    title: '형성평가 + 간격 반복',
-    desc: 'Bloom 분류 체계에 따른 형성평가와 Ebbinghaus 망각 곡선 기반 간격 반복으로 장기 기억을 강화합니다.',
-    tag: 'Bloom + Ebbinghaus',
-  },
-  {
-    Icon: MessageSquareCode,
-    title: 'Agentic RAG AI 튜터',
-    desc: 'Self-RAG 및 CRAG 아키텍처로 환각을 최소화하며, 학습자 맥락에 맞는 정밀한 답변을 생성합니다.',
-    tag: 'Self-RAG + CRAG',
-  },
-  {
-    Icon: BellRing,
-    title: '조기경보 + 동료 그룹핑',
-    desc: 'Learning Analytics 기반 이탈 위험 학습자를 조기에 감지하고, 동료 그룹핑으로 사회적 유대를 형성합니다.',
-    tag: 'Learning Analytics',
+    no: '1',
+    title: '학습목표',
+    when: '수업 전',
+    module: '① 진단',
   },
   {
     Icon: ClipboardCheck,
-    title: 'AI 제안 관리 탭',
-    desc: '교수자가 AI의 모든 제안을 한 곳에서 확인·승인·반려할 수 있는 Human-in-the-Loop 관리 인터페이스입니다.',
-    tag: 'HITL',
+    no: '2',
+    title: '체크리스트',
+    when: '수업 후',
+    module: '② 보정',
+  },
+  {
+    Icon: MessageSquareCode,
+    no: '3',
+    title: 'Socratic CAM LLM',
+    when: '실습 · 자습 중',
+    module: '③ 개입',
+  },
+  {
+    Icon: Repeat,
+    no: '4',
+    title: '망각곡선 퀴즈',
+    when: '수업 후 며칠 뒤',
+    module: '② 보정',
   },
 ] as const;
 
-const STUDENT_STEPS = [
-  { title: '진단 테스트', desc: '입문 수준을 측정하는 배치 테스트를 완료합니다.' },
-  { title: '갭맵 확인', desc: 'AI가 분석한 역량 격차를 시각적으로 확인합니다.' },
-  { title: '맞춤 커리큘럼', desc: '교수자가 승인한 개인별 학습 경로를 전달받습니다.' },
-  { title: 'AI 튜터 질문', desc: 'Agentic RAG 튜터에게 학습 중 궁금한 점을 질문합니다.' },
-  { title: '형성평가 + 복습', desc: '간격 반복 스케줄에 따라 평가와 복습을 수행합니다.' },
-] as const;
-
-const INSTRUCTOR_STEPS = [
-  { title: '대시보드 현황', desc: '학습자 전체 현황과 이탈 위험 지표를 확인합니다.' },
-  { title: 'AI 제안 관리', desc: 'AI가 생성한 커리큘럼·피드백 제안을 검토합니다.' },
-  { title: '근거 확인 후 승인', desc: '2-Tier Trust 프로세스에 따라 근거를 검증합니다.' },
-  { title: '학습자 전달', desc: '승인된 콘텐츠가 학습자에게 자동 전달됩니다.' },
-  { title: '반응으로 AI 개선', desc: '학습자 피드백이 AI 모델 개선에 반영됩니다.' },
-] as const;
-
-const RESEARCH = [
+const META_DEVICES = [
   {
-    venue: 'EDM 2025',
-    keyword: 'AI Over-reliance & Metacognition',
-    match: 'RE:Boot의 2-Tier Trust가 과의존 방지 메커니즘으로 직접 대응합니다.',
+    when: '수업 전',
+    device: '체크리스트 · 학습목표 · 이수율 점검',
+    purpose: '자기 위치와 도달 수준의 메타적 인식',
   },
   {
-    venue: 'CHI 2025',
-    keyword: 'Human-AI Collaboration in Education',
-    match: 'HITL 기반 교수자 승인 루프가 인간-AI 협업 프레임워크에 부합합니다.',
+    when: '수업 중 (2-Stage Cycle)',
+    device: 'Articulation → Reflection',
+    purpose: '명료화 후 성찰. 즉답 차단, 사고 외현화 유도',
   },
   {
-    venue: 'AIED 2025',
-    keyword: 'Adaptive Learning & Learner Modeling',
-    match: 'ZPD 갭맵과 적응형 커리큘럼이 학습자 모델링 최신 연구와 정합합니다.',
+    when: '수업 중 (G6 ★ 3-Step)',
+    device: 'Verbalize → Ground → Pass',
+    purpose: '업로드물에 즉답·평가 금지. 환각 차단 + 능력 착각 차단',
   },
   {
-    venue: 'LAK 2025',
-    keyword: 'Early Warning & Dropout Prevention',
-    match: 'Learning Analytics 기반 조기경보가 중도포기 예방 연구와 일치합니다.',
+    when: '수업 외',
+    device: '교수자 정서 개입 (데이터 기반)',
+    purpose: '인지적 어려움 구간에서 강사가 직접 개입',
   },
 ] as const;
 
-const DEMO_STEPS = [
-  '학습자 계정으로 로그인하여 진단 테스트를 시작합니다.',
-  '갭맵에서 자신의 역량 격차를 시각적으로 확인합니다.',
-  '교수자 계정으로 전환하여 AI 제안을 검토·승인합니다.',
-  '학습자 계정에서 승인된 맞춤 커리큘럼을 확인합니다.',
-  'AI 튜터에게 학습 관련 질문을 하고 답변을 받습니다.',
-  '형성평가를 수행하고 간격 반복 스케줄을 확인합니다.',
+const ROLES = [
+  {
+    role: 'AI',
+    Icon: Bot,
+    bullets: [
+      '지식 전달',
+      '학습자 행동·학습 데이터 수집 및 분석',
+      'Socratic 방식 질문 응답 (직답 회피)',
+    ],
+  },
+  {
+    role: '교수자 (인간)',
+    Icon: HeartHandshake,
+    bullets: [
+      'AI 산출물의 선택과 검증 (HITL)',
+      '학습자에 대한 정서적 지원',
+      '분석 데이터 기반 개입 의사결정',
+    ],
+  },
+] as const;
+
+const VALUE_LAYERS = [
+  {
+    layer: '교육적 가치 (학습자 단위)',
+    bullets: [
+      '메타인지 착각 완화',
+      '학습 지속성 유지',
+      '인지적 어려움 구간 통과율 상승',
+    ],
+  },
+  {
+    layer: '부트캠프 운영 가치 (기관 단위)',
+    bullets: [
+      '중도 이탈률 감소',
+      '운영 KPI 개선',
+      '1인당 최대 2,000만 원 국비 손실 절감',
+    ],
+  },
+  {
+    layer: '사회적 가치 (시스템 단위)',
+    bullets: [
+      '훈련 데이터 기반 적합 직무 매칭',
+      '취업·창업 → 일자리 순환 구조 안정성 강화',
+    ],
+  },
+] as const;
+
+const KEYWORDS = [
+  '적응형 학습',
+  'Human-in-the-Loop',
+  '부트캠프 중도 이탈',
+  'AI 과의존',
+  '학습분석',
 ] as const;
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#FAFAFB] text-gray-700" style={{ wordBreak: 'keep-all' }}>
       {/* ── Glass Nav ── */}
-      <nav className="fixed top-4 left-1/2 z-50 -translate-x-1/2 w-[min(95vw,56rem)]">
+      <nav className="fixed top-4 left-1/2 z-50 -translate-x-1/2 w-[min(95vw,64rem)]">
         <div className="flex items-center justify-between gap-4 rounded-full bg-white/70 backdrop-blur-xl border border-white/50 shadow-lg px-6 py-3">
           <Link href="/" className="text-lg font-bold tracking-tight text-indigo-600">
             RE:Boot
           </Link>
-
-          <div className="hidden sm:flex items-center gap-6 text-sm font-medium text-gray-600">
+          <div className="hidden md:flex items-center gap-5 text-sm font-medium text-gray-600">
             {NAV_LINKS.map((l) => (
               <a key={l.href} href={l.href} className="hover:text-indigo-600 transition-colors">
                 {l.label}
               </a>
             ))}
           </div>
-
           <Link
-            href="/auth"
+            href="/gap-map"
             className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
           >
             앱 실행
@@ -147,13 +256,12 @@ export default function LandingPage() {
 
       {/* ── 1. Hero ── */}
       <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-[#FAFAFB] to-indigo-50 px-6 pt-28 pb-20 text-center">
-        {/* Decorative blurs */}
         <div className="pointer-events-none absolute -top-32 -left-40 h-[420px] w-[420px] rounded-full bg-indigo-300/30 blur-[80px]" />
         <div className="pointer-events-none absolute -bottom-24 -right-32 h-[360px] w-[360px] rounded-full bg-violet-300/20 blur-[80px]" />
 
         <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-white/80 px-4 py-1.5 text-sm font-medium text-indigo-700 backdrop-blur-sm">
           <Sparkles className="h-4 w-4" />
-          KAEIM 2026 미디어전 출품작
+          KAEIM 2026 춘계학술대회 미디어전 출품작
         </span>
 
         <h1 className="max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
@@ -169,18 +277,26 @@ export default function LandingPage() {
           </span>
         </h1>
 
-        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-gray-600 sm:text-xl">
-          부트캠프 중도포기율 21%와 AI 과의존 문제를 동시에 해결하는
+        <p className="mt-6 max-w-3xl text-base leading-relaxed text-gray-600 sm:text-lg">
+          부트캠프 중도 이탈률 21%와 AI 과의존을 동시에 해결하기 위해,
           <br className="hidden sm:block" />
-          Human-in-the-Loop 적응형 학습 플랫폼.
+          AI의 확장성과 교수자 판단의 신뢰성을 결합한 Human-in-the-Loop 적응형 학습 플랫폼.
+        </p>
+
+        <p className="mt-6 max-w-3xl rounded-2xl border border-indigo-100 bg-white/70 px-5 py-3 text-xs leading-relaxed text-gray-600 backdrop-blur-sm sm:text-sm">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-indigo-500">
+            발표 논문 제목
+          </span>
+          <br />
+          {PAPER_TITLE}
         </p>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <Link
-            href="/auth"
+            href="/gap-map"
             className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors"
           >
-            앱 실행 <ArrowRight className="h-4 w-4" />
+            라이브 데모 보기 <ArrowRight className="h-4 w-4" />
           </Link>
           <a
             href="https://github.com/8ducati0n/RE-Boot"
@@ -192,12 +308,6 @@ export default function LandingPage() {
           </a>
         </div>
 
-        <div className="mt-6 rounded-xl bg-white/60 backdrop-blur-sm border border-indigo-100 px-6 py-3 text-xs text-gray-500">
-          <p className="font-medium text-gray-600 mb-1">데모 계정</p>
-          <p>학습자 : student@demo.re / student1234</p>
-          <p>교수자 : instructor@demo.re / instructor1234</p>
-        </div>
-
         <a href="#problem" className="mt-12 animate-bounce text-indigo-400">
           <ChevronDown className="h-6 w-6" />
         </a>
@@ -207,102 +317,93 @@ export default function LandingPage() {
       <section id="problem" className="py-24 px-6">
         <div className="mx-auto max-w-6xl">
           <h2 className="text-center text-3xl font-bold text-gray-900 sm:text-4xl">
-            두 개의 위기, 하나의 해법
+            네 가지 문제, 하나의 플랫폼
           </h2>
-
-          <div className="mt-14 grid gap-8 md:grid-cols-2">
-            {/* Card 1 */}
-            <div className="rounded-2xl border border-indigo-100 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
-              <p className="text-sm font-semibold uppercase tracking-wider text-indigo-500">
-                위기 1 · 중도포기
-              </p>
-              <p className="mt-4 font-mono text-5xl font-bold text-indigo-700">21%</p>
-              <p className="mt-1 text-lg font-semibold text-gray-900">부트캠프 중도포기율</p>
-              <p className="mt-4 leading-relaxed text-gray-600">
-                부트캠프 중도포기의 가장 큰 원인은 동료관계(17.65%)입니다. 개인별 학습 격차가 벌어지면 고립감이 심화되고, 결국 이탈로 이어집니다. 적응형 학습과 동료 그룹핑이 핵심 해법입니다.
-              </p>
-              <p className="mt-4 text-xs text-gray-400">박진아·김지은 (2024)</p>
-            </div>
-
-            {/* Card 2 */}
-            <div className="rounded-2xl border border-indigo-100 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
-              <p className="text-sm font-semibold uppercase tracking-wider text-indigo-500">
-                위기 2 · 과의존
-              </p>
-              <p className="mt-4 font-mono text-3xl font-bold text-indigo-700">
-                AI 과의존 / Over-reliance
-              </p>
-              <p className="mt-4 leading-relaxed text-gray-600">
-                AI가 학습 과정 전반을 대체하면 학습자는 비판적 사고와 메타인지 역량을 잃게 됩니다. AI의 제안을 교수자가 검증하는 Human-in-the-Loop 구조가 과의존을 방지합니다.
-              </p>
-              <p className="mt-4 text-xs text-gray-400">Tang &amp; Bosch (2025), EDM</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 3. 2-Tier Trust ── */}
-      <section className="bg-indigo-50/30 py-24 px-6">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="text-center text-3xl font-bold text-gray-900 sm:text-4xl">
-            2-Tier Trust: 확장성과 신뢰성을 동시에
-          </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-center leading-relaxed text-gray-600">
-            AI의 분석 결과를 자동 검증(Tier 1)과 교수자 승인(Tier 2) 두 단계로 필터링합니다. 확장성을 유지하면서도 교수자의 전문성과 판단을 최종 의사결정에 반영하여 신뢰성을 확보합니다.
+          <p className="mx-auto mt-4 max-w-2xl text-center leading-relaxed text-gray-600">
+            중도 이탈·AI 과의존이라는 두 가지 위기는 교수자 역량 편차와 데이터 인프라 공백이라는
+            구조적 조건 위에서 발생한다. RE:Boot는 네 문제를 하나의 시스템으로 묶는다.
           </p>
 
-          {/* Flow diagram */}
-          <div className="mt-14 overflow-x-auto">
-            <div className="mx-auto flex min-w-[640px] max-w-4xl items-center justify-center gap-0 text-sm">
-              {[
-                { label: '학습 데이터', sub: '수집' },
-                { label: 'AI 분석', sub: '추론' },
-                { label: 'Tier 1', sub: '자동 검증' },
-                { label: 'Tier 2', sub: '교수자 승인' },
-                { label: '학습자 전달', sub: '적용' },
-                { label: '피드백 루프', sub: '개선' },
-              ].map((step, i, arr) => (
-                <div key={step.label} className="flex items-center">
-                  <div
-                    className={`flex flex-col items-center justify-center rounded-xl border px-4 py-3 text-center ${
-                      i === 2 || i === 3
-                        ? 'border-indigo-300 bg-indigo-100/60 text-indigo-800'
-                        : 'border-indigo-100 bg-white text-gray-700'
-                    }`}
-                  >
-                    <span className="font-semibold">{step.label}</span>
-                    <span className="mt-0.5 text-xs text-gray-500">{step.sub}</span>
-                  </div>
-                  {i < arr.length - 1 && (
-                    <span className="mx-1 text-indigo-400 font-bold text-lg">→</span>
-                  )}
-                </div>
-              ))}
-            </div>
+          <div className="mt-14 grid gap-6 sm:grid-cols-2">
+            {PROBLEMS.map((p) => (
+              <div
+                key={p.label}
+                className="rounded-2xl border border-indigo-100 bg-white p-8 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <p className="text-xs font-mono uppercase tracking-widest text-indigo-500">
+                  {p.label}
+                </p>
+                <p className="mt-3 text-2xl font-bold text-indigo-700">{p.metric}</p>
+                <p className="mt-3 leading-relaxed text-sm text-gray-600">{p.detail}</p>
+                <p className="mt-4 text-xs text-gray-400">{p.source}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── 4. Features ── */}
-      <section id="features" className="py-24 px-6">
+      {/* ── 3. Cycle ── */}
+      <section id="cycle" className="bg-indigo-50/30 py-24 px-6">
         <div className="mx-auto max-w-6xl">
           <h2 className="text-center text-3xl font-bold text-gray-900 sm:text-4xl">
-            6가지 핵심 기능
+            진단 → 개입 → 보정 순환 구조
           </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center leading-relaxed text-gray-600">
+            네 가지 핵심 모듈이 하나의 순환 사이클로 통합된다. 한 사이클이 도는 동안 학습자
+            상태가 정량화되고, 교수자가 승인한 개입이 전달되며, 지식이 재인출을 통해 정착된다.
+          </p>
 
-          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f) => (
+          <div className="mt-14 grid items-stretch gap-6 md:grid-cols-3">
+            {CYCLE.map((c, i) => (
               <div
-                key={f.title}
-                className="group rounded-2xl border border-indigo-100 bg-white p-7 shadow-sm hover:shadow-md transition-shadow"
+                key={c.phase}
+                className="relative rounded-2xl border border-indigo-100 bg-white p-7 shadow-sm"
               >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-                  <f.Icon className="h-5 w-5" />
+                <div className="flex items-center gap-3">
+                  <span className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-bold text-white">
+                    {c.phase}
+                  </span>
+                  <span className="font-mono text-xs text-indigo-400">{c.label}</span>
                 </div>
-                <h3 className="mt-4 text-lg font-bold text-gray-900">{f.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-gray-600">{f.desc}</p>
+                <p className="mt-4 text-sm leading-relaxed text-gray-700">{c.body}</p>
+                {i < CYCLE.length - 1 && (
+                  <span className="absolute -right-3 top-1/2 hidden -translate-y-1/2 text-2xl font-bold text-indigo-400 md:block">
+                    →
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 4. Modules ── */}
+      <section id="modules" className="py-24 px-6">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="text-center text-3xl font-bold text-gray-900 sm:text-4xl">
+            4 핵심 모듈
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center leading-relaxed text-gray-600">
+            ZPD 진단·갭 맵, Bloom 완전학습과 Ebbinghaus 망각곡선, AI-TPACK 협업, 학습분석 기반
+            조기경보·동료 그룹핑. 네 모듈이 순환 구조의 각 단계를 채운다.
+          </p>
+
+          <div className="mt-14 grid gap-6 sm:grid-cols-2">
+            {MODULES.map((m) => (
+              <div
+                key={m.title}
+                className="rounded-2xl border border-indigo-100 bg-white p-7 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                    <m.Icon className="h-5 w-5" />
+                  </div>
+                  <span className="font-mono text-lg font-bold text-indigo-400">{m.no}</span>
+                </div>
+                <h3 className="mt-4 text-lg font-bold text-gray-900">{m.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600">{m.body}</p>
                 <span className="mt-4 inline-block rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600">
-                  {f.tag}
+                  {m.theory}
                 </span>
               </div>
             ))}
@@ -310,116 +411,184 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── 5. User Journey ── */}
-      <section id="journey" className="bg-indigo-50/30 py-24 px-6">
+      {/* ── 5. Implementation ── */}
+      <section id="implementation" className="bg-indigo-50/30 py-24 px-6">
         <div className="mx-auto max-w-6xl">
           <h2 className="text-center text-3xl font-bold text-gray-900 sm:text-4xl">
-            학습자와 교수자, 두 개의 여정
+            구현 단위 · 학습자 5 컴포넌트 + 강사 F1
           </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center leading-relaxed text-gray-600">
+            4 모듈은 강사 측 커리큘럼 등록(F1)과 학습자 측 5 컴포넌트로 구현된다. 강사가 한 번
+            입력하면 학습자 측 5 컴포넌트가 자동 생성된다.
+          </p>
 
-          <div className="mt-14 grid gap-8 md:grid-cols-2">
-            {/* Student */}
-            <div className="rounded-2xl border border-indigo-100 bg-white p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100">
-                  <span className="text-lg">🎓</span>
-                </div>
-                <h3 className="text-xl font-bold text-indigo-700">학습자 여정</h3>
-              </div>
-              <ol className="space-y-5">
-                {STUDENT_STEPS.map((s, i) => (
-                  <li key={s.title} className="flex items-start gap-4 rounded-xl border border-indigo-50 bg-indigo-50/30 p-4 hover:border-indigo-200 hover:bg-indigo-50/60 transition">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white shadow-sm">
-                      {i + 1}
-                    </span>
-                    <div>
-                      <p className="font-semibold text-gray-900">{s.title}</p>
-                      <p className="mt-1 text-sm text-gray-600 leading-relaxed">{s.desc}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
+          {/* Instructor F1 */}
+          <div className="mx-auto mt-12 max-w-4xl rounded-2xl border border-violet-100 bg-white p-6 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-violet-600 px-3 py-1 text-xs font-bold text-white">
+                F1
+              </span>
+              <span className="font-mono text-xs text-violet-500">강사 측</span>
             </div>
+            <h3 className="mt-3 text-lg font-bold text-gray-900">커리큘럼 등록 칸</h3>
+            <p className="mt-1 text-sm leading-relaxed text-gray-600">
+              주차 · 회차 · 학습목표 · 사전 요구 지식 · 체크리스트(증거 입력형) · CAM 응답 범위 ·
+              퀴즈 풀 · 망각곡선 간격을 입력한다.
+            </p>
+          </div>
 
-            {/* Instructor */}
-            <div className="rounded-2xl border border-indigo-100 bg-white p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100">
-                  <span className="text-lg">👨‍🏫</span>
+          {/* Learner 5 components */}
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {LEARNER_COMPONENTS.map((c) => (
+              <div
+                key={c.no}
+                className="rounded-2xl border border-indigo-100 bg-white p-7 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                    <c.Icon className="h-5 w-5" />
+                  </div>
+                  <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-mono text-indigo-600">
+                    {c.when}
+                  </span>
                 </div>
-                <h3 className="text-xl font-bold text-indigo-700">교수자 여정</h3>
+                <p className="mt-4 text-xs font-mono uppercase tracking-widest text-indigo-400">
+                  Component {c.no}
+                </p>
+                <h3 className="mt-1 text-lg font-bold text-gray-900">{c.title}</h3>
+                <p className="mt-3 inline-block rounded-full bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700">
+                  {c.module}
+                </p>
               </div>
-              <ol className="space-y-5">
-                {INSTRUCTOR_STEPS.map((s, i) => (
-                  <li key={s.title} className="flex items-start gap-4 rounded-xl border border-indigo-50 bg-indigo-50/30 p-4 hover:border-indigo-200 hover:bg-indigo-50/60 transition">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-600 text-sm font-bold text-white shadow-sm">
-                      {i + 1}
-                    </span>
-                    <div>
-                      <p className="font-semibold text-gray-900">{s.title}</p>
-                      <p className="mt-1 text-sm text-gray-600 leading-relaxed">{s.desc}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── 6. Research ── */}
+      {/* ── 6. Meta-cognition devices ── */}
       <section className="py-24 px-6">
         <div className="mx-auto max-w-6xl">
           <h2 className="text-center text-3xl font-bold text-gray-900 sm:text-4xl">
-            2025 해외 탑 저널 트렌드와 정합
+            메타인지 착각 완화 4장치
           </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center leading-relaxed text-gray-600">
+            수업 전·중·외의 서로 다른 시점에서 능력 착각(competence illusion)과 AI 과의존을
+            동시에 완화한다.
+          </p>
 
-          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {RESEARCH.map((r) => (
+          <div className="mt-14 grid gap-6 sm:grid-cols-2">
+            {META_DEVICES.map((d) => (
               <div
-                key={r.venue}
-                className="rounded-2xl border border-indigo-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
+                key={d.when}
+                className="rounded-2xl border border-indigo-100 bg-white p-7 shadow-sm"
               >
-                <span className="inline-block rounded-full bg-indigo-600 px-3 py-1 text-xs font-bold text-white">
-                  {r.venue}
-                </span>
-                <p className="mt-4 text-sm font-semibold text-gray-900">{r.keyword}</p>
-                <p className="mt-2 text-sm leading-relaxed text-gray-600">{r.match}</p>
+                <p className="text-xs font-mono uppercase tracking-widest text-indigo-500">
+                  {d.when}
+                </p>
+                <p className="mt-3 text-base font-bold text-gray-900">{d.device}</p>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600">{d.purpose}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── 7. Demo ── */}
-      <section id="demo" className="bg-indigo-50/30 py-24 px-6">
+      {/* ── 7. HITL Roles ── */}
+      <section className="bg-indigo-50/30 py-24 px-6">
         <div className="mx-auto max-w-6xl">
           <h2 className="text-center text-3xl font-bold text-gray-900 sm:text-4xl">
-            3분 데모 시나리오
+            HITL 역할 구조
           </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center leading-relaxed text-gray-600">
+            AI의 모든 교육적 제안은 교수자 승인을 거쳐야만 학습자에게 전달된다. AI는 인지,
+            교수자는 정서. 역할을 나누는 것이 곧 학습자 보호 장치다.
+          </p>
 
-          {/* Video placeholder */}
-          <div className="mx-auto mt-12 flex h-72 max-w-3xl items-center justify-center rounded-2xl bg-gray-100 border border-indigo-100">
-            <Play className="h-14 w-14 text-indigo-300" />
+          <div className="mt-14 grid gap-8 md:grid-cols-2">
+            {ROLES.map((r) => (
+              <div
+                key={r.role}
+                className="rounded-2xl border border-indigo-100 bg-white p-8 shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+                    <r.Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900">{r.role}</h3>
+                </div>
+                <ul className="mt-5 space-y-2 text-sm text-gray-700">
+                  {r.bullets.map((b) => (
+                    <li key={b} className="flex gap-2">
+                      <span className="text-indigo-500">·</span>
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
 
-          <ol className="mx-auto mt-12 max-w-2xl grid gap-4 sm:grid-cols-2">
-            {DEMO_STEPS.map((step, i) => (
-              <li
-                key={i}
-                className="flex items-start gap-3 rounded-xl border border-indigo-100 bg-white p-4 shadow-sm"
-              >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
-                  {i + 1}
-                </span>
-                <p className="text-sm leading-relaxed text-gray-700">{step}</p>
-              </li>
-            ))}
-          </ol>
+          <p className="mx-auto mt-10 max-w-2xl rounded-2xl border border-indigo-200 bg-white px-6 py-4 text-center text-sm text-indigo-800">
+            정서적 위로·완성 메시지 생성은 AI 금지 영역. 정서 신호 감지 시 “강사 면담 요청”
+            옵션을 노출한다.
+          </p>
         </div>
       </section>
 
-      {/* ── 8. Conference ── */}
+      {/* ── 8. Value chain ── */}
+      <section className="py-24 px-6">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="text-center text-3xl font-bold text-gray-900 sm:text-4xl">
+            다층적 가치 사슬
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center leading-relaxed text-gray-600">
+            학습자 → 기관 → 사회. RE:Boot의 효과는 세 층위로 누적된다.
+          </p>
+
+          <div className="mt-14 grid gap-6 md:grid-cols-3">
+            {VALUE_LAYERS.map((v, i) => (
+              <div
+                key={v.layer}
+                className="rounded-2xl border border-indigo-100 bg-white p-7 shadow-sm"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
+                  {i + 1}
+                </span>
+                <p className="mt-3 text-sm font-bold text-gray-900">{v.layer}</p>
+                <ul className="mt-3 space-y-1 text-sm text-gray-700">
+                  {v.bullets.map((b) => (
+                    <li key={b} className="flex gap-2">
+                      <span className="text-indigo-500">·</span>
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 9. Keywords ── */}
+      <section className="bg-indigo-50/30 py-20 px-6">
+        <div className="mx-auto max-w-4xl text-center">
+          <p className="text-xs font-mono uppercase tracking-widest text-indigo-500">
+            제출 키워드
+          </p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            {KEYWORDS.map((k) => (
+              <span
+                key={k}
+                className="rounded-full border border-indigo-200 bg-white px-4 py-1.5 text-sm text-indigo-700"
+              >
+                {k}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 10. Conference ── */}
       <section id="conference" className="bg-indigo-950 py-32 px-6 text-white">
         <div className="mx-auto max-w-6xl text-center">
           <h2 className="text-3xl font-bold leading-snug text-indigo-300 sm:text-4xl">
@@ -435,7 +604,7 @@ export default function LandingPage() {
             {[
               { Icon: Calendar, label: '2026.05.30', sub: '학술대회 일시' },
               { Icon: Building2, label: '연세대학교', sub: '개최 장소' },
-              { Icon: BookMarked, label: '김혜진', sub: '교육공학 석사과정' },
+              { Icon: BookMarked, label: '김혜진', sub: '교육공학 석사과정 · CogVis AI LAB' },
             ].map((c) => (
               <div
                 key={c.label}
@@ -449,15 +618,15 @@ export default function LandingPage() {
           </div>
 
           <Link
-            href="/docs"
+            href="/gap-map"
             className="mt-12 inline-flex items-center gap-2 rounded-full bg-indigo-600 px-7 py-3 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors"
           >
-            학술 문서 보기 <ArrowRight className="h-4 w-4" />
+            라이브 데모 보기 <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </section>
 
-      {/* ── 9. Footer ── */}
+      {/* ── 11. Footer ── */}
       <footer className="border-t border-indigo-100 bg-[#FAFAFB] py-12 px-6">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 text-center">
           <p className="text-lg font-bold text-indigo-600">RE:Boot</p>
