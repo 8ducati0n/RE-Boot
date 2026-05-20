@@ -26,6 +26,18 @@ dist/
 .vite/
 *.log
 
+# Next.js (web/)
+.next/
+out/
+.vercel/
+*.tsbuildinfo
+
+# Demo output (영상·SRT 산출물 — 레포 비대화 방지)
+output/
+
+# 논문 PDF (저작권 보호 + 레포 비대화 방지)
+논문/*.pdf
+
 # IDE
 .idea/
 .vscode/
