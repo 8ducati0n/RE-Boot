@@ -39,7 +39,7 @@
 
 ### 문제 2: AI 과의존 (Over-reliance)
 
-- **출처**: EDM 2025 Best Paper (Tang & Bosch). *Trust but Risk: Over-reliance on AI Educational Tools*.
+- **출처**: Fernandes et al. (2025). *Performance and Metacognition Disconnect when Reasoning in Human-AI Interaction*. arXiv:2409.16708. ❗ v1의 "EDM 2025 Best Paper (Tang & Bosch). *Trust but Risk*" 표기는 환각 인용으로 확인되어 정정(2026-05-20).
 - **현상**: 학습자가 AI 도구(ChatGPT 등)를 무비판적으로 사용 → 학습 효과 저하
 - **리스크**: AI가 잘못된 정보를 제공해도 학습자가 걸러내지 못함
 - **구조적 한계**: 교육적 맥락 판단까지 AI가 대체 시도 → 교수자 역할 축소
